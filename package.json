@@ -1,0 +1,31 @@
+{
+  "name": "node-resp",
+  "version": "0.0.1",
+  "description": "REdis Serialization Protocol for Node.js",
+  "dependencies": {
+    "eventemitter3": "0.1.2"
+  },
+  "devDependencies": {
+    "mocha": "1.20.0"
+  },
+  "scripts": {
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha -R spec"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:justinfreitag/node-resp.git"
+  },
+  "keywords": [
+    "redis",
+    "database",
+    "client"
+  ],
+  "author": {
+    "name": "Justin Freitag <justin.freitag@gmail.com>"
+  },
+  "license": "MIT"
+}
+
