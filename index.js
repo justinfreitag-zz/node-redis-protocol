@@ -132,6 +132,15 @@ function parseArray(parser) {
   return responses;
 }
 
+function handleUnexpectedType(parser, type) {
+  var error = new Error('Unexpected type: ' + type);
+  if (parser.listeners('error').length) {
+    parser.emit('error', error);
+    return null;
+  }
+  throw error;
+}
+
 function parseType(parser, type) {
   if (type === 43) { // +
     return parseSimpleString(parser);
@@ -148,8 +157,7 @@ function parseType(parser, type) {
   if (type === 45) { // -
     return parseError(parser);
   }
-  parser.emit('error', new Error('Unexpected type: ' + type));
-  return null;
+  return handleUnexpectedType(parser, type);
 }
 
 function appendBuffer(parser, buffer) {
@@ -183,6 +191,9 @@ ResponseParser.prototype.parse = function (buffer) {
       response = null;
     }
     this.emit('response', response);
+  }
+  if (this.offset >= this.buffer.length) {
+    this.buffer = null;
   }
 };
 

@@ -13,19 +13,65 @@ it('should respond with error', function (done) {
 
 it('should respond with number', function (done) {
   parser.once('response', function (response) {
-    assert.equal(response, 4);
+    assert.equal(response, 42);
     done();
   });
-  parser.parse(new Buffer(':4\r\n'));
+  parser.parse(new Buffer(':42\r\n'));
+});
+
+it('should dereference parser buffer', function (done) {
+  parser.once('response', function (response) {
+    done();
+  });
+  parser.parse(new Buffer('+FOO\r\n'));
+  assert.equal(parser.buffer, null);
+});
+
+it('should handle chunked data', function (done) {
+  parser.once('response', function (response) {
+    assert.equal(response[0], 'OK');
+    assert.equal(response[1], 'FOO');
+    assert.equal(response[2], 'BAR');
+    done();
+  });
+  parser.parse(new Buffer('*3\r\n+OK\r\n$'));
+  parser.parse(new Buffer('3\r\nFOO\r\n$3\r\nBAR\r\n'));
 });
 
 it('should respond with array', function (done) {
   parser.once('response', function (response) {
     assert.equal(response[0], 'OK');
-    assert.equal(response[1], null);
-    assert.equal(response[2], 'FOO');
+    assert.equal(response[1], 'FOO');
     done();
   });
-  parser.parse(new Buffer('*3\r\n+OK\r\n*-1\r\n$3\r\nFOO\r\n'));
+  parser.parse(new Buffer('*2\r\n+OK\r\n$3\r\nFOO\r\n'));
+});
+
+it('should handle null array', function (done) {
+  parser.once('response', function (response) {
+    assert.equal(response, null);
+    done();
+  });
+  parser.parse(new Buffer('*-1\r\n'));
+});
+
+it('should throw unexpected type error', function () {
+  parser.once('response', function (response) {
+    assert.fail();
+  });
+  assert.throws(function () {
+    parser.parse(new Buffer('FOO\r\n'));
+  });
+});
+
+it('should emit unexpected type error', function (done) {
+  parser.once('response', function (response) {
+    assert.fail();
+  });
+  parser.once('error', function (error) {
+    assert(error instanceof Error);
+    done();
+  });
+  parser.parse(new Buffer('*2\r\nFOO\r\n$3\r\nBAR\r\n'));
 });
 
