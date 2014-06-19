@@ -38,6 +38,7 @@ function copyBuffer(buffer, begin, end) {
   return buffer.toString('utf-8', begin, end);
 }
 
+// TODO add check for max response length
 function seekTerminator(parser) {
   var offset = parser.offset + 1;
   while (parser.buffer[offset] !== 0x0d && parser.buffer[offset+1] !== 0x0a) {
@@ -50,14 +51,14 @@ function seekTerminator(parser) {
   return offset;
 }
 
-function parseSize(parser) {
+function parseLength(parser) {
   var begin = parser.offset;
   var end = seekTerminator(parser);
   if (end === null) {
     return null;
   }
-  var size = decodeString(parser.buffer, begin, end);
-  return parseInt(size, 10);
+  var length = decodeString(parser.buffer, begin, end);
+  return parseInt(length, 10);
 }
 
 function parseSimpleString(parser) {
@@ -78,15 +79,15 @@ function parseError(parser) {
 }
 
 function parseBulkString(parser) {
-  var size = parseSize(parser);
-  if (size === null) {
+  var length = parseLength(parser);
+  if (length === null) {
     return null;
   }
-  if (size === -1) {
+  if (length === -1) {
     return -1;
   }
   var begin = parser.offset;
-  var end = parser.offset + size;
+  var end = parser.offset + length;
   if ((end + 2) > parser.buffer.length) {
     return null;
   }
@@ -104,18 +105,18 @@ function parseInteger(parser) {
 }
 
 function parseArray(parser) {
-  var size = parseSize(parser);
-  if (size === null) {
+  var length = parseLength(parser);
+  if (length === null) {
     return null;
   }
-  if (size === -1) {
+  if (length === -1) {
     return -1;
   }
-  if ((parser.offset + (size * 4)) > parser.buffer.length) {
+  if ((parser.offset + (length * 4)) > parser.buffer.length) {
     return null;
   }
   var responses = [];
-  for (var i = 0; i < size; i++) {
+  for (var i = 0; i < length; i++) {
     if ((parser.offset + 4) > parser.buffer.length) {
       return null;
     }
@@ -132,8 +133,7 @@ function parseArray(parser) {
   return responses;
 }
 
-function handleUnexpectedType(parser, type) {
-  var error = new Error('Unexpected type: ' + type);
+function handleError(parser, error) {
   if (parser.listeners('error').length) {
     parser.emit('error', error);
     return null;
@@ -157,19 +157,30 @@ function parseType(parser, type) {
   if (type === 45) { // -
     return parseError(parser);
   }
-  return handleUnexpectedType(parser, type);
+  return handleError(parser, new Error('Unexpected type: ' + type));
 }
 
 function appendBuffer(parser, buffer) {
   if (parser.buffer === null || parser.offset >= parser.buffer.length) {
     parser.buffer = buffer;
   } else {
+    if (((parser.buffer.length - parser.buffer.offset) + buffer.length) >
+      parser.options.maximumBufferLength) {
+        handleError(this, new Error('Maximum buffer length exceeded'));
+        return;
+    }
     parser.buffer = Buffer.concat([parser.buffer.slice(parser.offset), buffer]);
   }
   parser.offset = 0;
 }
 
-function ResponseParser() {
+var DEFAULT_OPTIONS = {
+  maximumBufferLength: 0x1000000,
+  maximumResponseLength: 0x100000
+};
+
+function ResponseParser(options) {
+  this.options = util._extend(DEFAULT_OPTIONS, options);
   this.buffer = null;
   this.offset = 0;
 

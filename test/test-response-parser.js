@@ -3,6 +3,8 @@ var resp = require('..');
 
 var parser = new resp.ResponseParser();
 
+// TODO add maximum length buffer and response tests
+
 it('should respond with error', function (done) {
   parser.once('response', function (response) {
     assert(response instanceof Error);
