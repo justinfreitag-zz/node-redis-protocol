@@ -41,7 +41,7 @@ function copyBuffer(buffer, begin, end) {
 // TODO add check for max response length
 function seekTerminator(parser) {
   var offset = parser.offset + 1;
-  while (parser.buffer[offset] !== 0x0d && parser.buffer[offset+1] !== 0x0a) {
+  while (parser.buffer[offset] !== 13 && parser.buffer[offset+1] !== 10) {
     ++offset;
     if (offset >= parser.buffer.length) {
       return null;
@@ -112,10 +112,7 @@ function parseArray(parser) {
   if (length === -1) {
     return -1;
   }
-  if ((parser.offset + (length * 4)) > parser.buffer.length) {
-    return null;
-  }
-  var responses = [];
+  var responses = new Array(length);
   for (var i = 0; i < length; i++) {
     if ((parser.offset + 4) > parser.buffer.length) {
       return null;
@@ -164,19 +161,22 @@ function appendBuffer(parser, buffer) {
   if (parser.buffer === null || parser.offset >= parser.buffer.length) {
     parser.buffer = buffer;
   } else {
-    if (((parser.buffer.length - parser.buffer.offset) + buffer.length) >
-      parser.options.maximumBufferLength) {
-        handleError(this, new Error('Maximum buffer length exceeded'));
+    var length = (parser.buffer.length - parser.offset) + buffer.length;
+    if (length > parser.options.maxBufferLength) {
+        handleError(this, new Error('max buffer length exceeded'));
         return;
     }
-    parser.buffer = Buffer.concat([parser.buffer.slice(parser.offset), buffer]);
+    var newBuffer = new Buffer(length);
+    parser.buffer.copy(newBuffer, 0, parser.offset, parser.buffer.length);
+    buffer.copy(newBuffer, parser.buffer.length, 0, buffer.length);
+    parser.buffer = newBuffer;
   }
   parser.offset = 0;
 }
 
 var DEFAULT_OPTIONS = {
-  maximumBufferLength: 0x1000000,
-  maximumResponseLength: 0x100000
+  maxBufferLength: 16777216,
+  maxResponseLength: 1048576
 };
 
 function ResponseParser(options) {
@@ -209,4 +209,5 @@ ResponseParser.prototype.parse = function (buffer) {
 };
 
 exports.ResponseParser = ResponseParser;
+exports.ResponseParser.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 
