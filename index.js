@@ -188,6 +188,8 @@ function ResponseParser(options) {
 }
 util.inherits(ResponseParser, events.EventEmitter);
 
+ResponseParser.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
+
 ResponseParser.prototype.parse = function (buffer) {
   appendBuffer(this, buffer);
   while ((this.offset + 4) <= this.buffer.length) {
@@ -209,5 +211,4 @@ ResponseParser.prototype.parse = function (buffer) {
 };
 
 exports.ResponseParser = ResponseParser;
-exports.ResponseParser.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 
