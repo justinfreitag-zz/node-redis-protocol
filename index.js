@@ -41,9 +41,10 @@ function copyBuffer(buffer, begin, end) {
 // TODO add check for max response length
 function seekTerminator(parser) {
   var offset = parser.offset + 1;
-  while (parser.buffer[offset] !== 13 && parser.buffer[offset+1] !== 10) {
+  var length = parser.buffer.length;
+  while (parser.buffer[offset] !== 13 && parser.buffer[offset + 1] !== 10) {
     ++offset;
-    if (offset >= parser.buffer.length) {
+    if (offset >= length) {
       return null;
     }
   }
@@ -57,8 +58,7 @@ function parseLength(parser) {
   if (end === null) {
     return null;
   }
-  var length = decodeString(parser.buffer, begin, end);
-  return parseInt(length, 10);
+  return parseInt(decodeString(parser.buffer, begin, end), 10);
 }
 
 function parseSimpleString(parser) {
@@ -86,6 +86,7 @@ function parseBulkString(parser) {
   if (length === -1) {
     return -1;
   }
+
   var begin = parser.offset;
   var end = parser.offset + length;
   if ((end + 2) > parser.buffer.length) {
@@ -112,7 +113,9 @@ function parseArray(parser) {
   if (length === -1) {
     return -1;
   }
+
   var responses = new Array(length);
+
   for (var i = 0; i < length; i++) {
     if ((parser.offset + 4) > parser.buffer.length) {
       return null;
@@ -127,6 +130,7 @@ function parseArray(parser) {
     }
     responses[i] = response;
   }
+
   return responses;
 }
 
@@ -134,6 +138,7 @@ function handleError(parser, error) {
   if (!parser.emit('error', error)) {
     throw error;
   }
+
   return null;
 }
 
@@ -153,6 +158,7 @@ function parseType(parser, type) {
   if (type === 45) { // -
     return parseError(parser);
   }
+
   return handleError(parser, new Error('Unexpected type: ' + type));
 }
 
@@ -191,6 +197,7 @@ ResponseParser.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 
 ResponseParser.prototype.parse = function (buffer) {
   appendBuffer(this, buffer);
+
   while ((this.offset + 4) <= this.buffer.length) {
     var offset = this.offset;
     var type = this.buffer[this.offset++];
@@ -204,6 +211,7 @@ ResponseParser.prototype.parse = function (buffer) {
     }
     this.emit('response', response);
   }
+
   if (this.offset >= this.buffer.length) {
     this.buffer = null;
   }
