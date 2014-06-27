@@ -131,11 +131,10 @@ function parseArray(parser) {
 }
 
 function handleError(parser, error) {
-  if (parser.listeners('error').length) {
-    parser.emit('error', error);
-    return null;
+  if (!parser.emit('error', error)) {
+    throw error;
   }
-  throw error;
+  return null;
 }
 
 function parseType(parser, type) {
@@ -163,7 +162,7 @@ function appendBuffer(parser, buffer) {
   } else {
     var length = (parser.buffer.length - parser.offset) + buffer.length;
     if (length > parser.options.maxBufferLength) {
-        handleError(this, new Error('max buffer length exceeded'));
+        handleError(this, new Error('Maximum buffer length exceeded'));
         return;
     }
     var newBuffer = new Buffer(length);
