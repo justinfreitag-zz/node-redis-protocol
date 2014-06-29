@@ -3,58 +3,56 @@
 var events = require('eventemitter3');
 var util = require('util');
 
-function decodeString(buffer, begin, length) {
+function decodeString(buffer, offset, length) {
   var tmp = '';
   while (length--) {
-    tmp = String.fromCharCode(buffer[begin + length]) + tmp;
+    tmp = String.fromCharCode(buffer[offset + length]) + tmp;
   }
   return tmp;
 }
 
-function copyBuffer(buffer, begin, length) {
+function copyBuffer(buffer, offset, length) {
   // TODO add binary support
   if (length < 2048) {
-    return decodeString(buffer, begin, length);
+    return decodeString(buffer, offset, length);
   }
-  return buffer.toString('utf8', begin, begin + length);
+  return buffer.toString('utf8', offset, offset + length);
 }
 
 function seekTerminator(parser) {
-  var offset = parser.offset;
+  var offset = parser.offset + 1;
   var length = parser.buffer.length;
-  while (++offset !== length) {
-    if (parser.buffer[offset] === 13 && parser.buffer[offset + 1] === 10) {
-      length = offset - parser.offset;
-      parser.offset = offset + 2;
-      return length;
+  while (parser.buffer[offset] !== 13 && parser.buffer[offset + 1] !== 10) {
+    if (++offset >= length) {
+      return;
     }
   }
+  length = offset - parser.offset;
+  parser.offset = offset + 2;
+  return length;
 }
 
 function parseLength(parser) {
-  var begin = parser.offset;
+  var offset = parser.offset;
   var length = seekTerminator(parser);
-  if (length === undefined) {
-    return;
+  if (length !== undefined) {
+    return parseInt(decodeString(parser.buffer, offset, length), 10);
   }
-  return parseInt(decodeString(parser.buffer, begin, length), 10);
 }
 
 function parseSimpleString(parser) {
-  var begin = parser.offset;
+  var offset = parser.offset;
   var length = seekTerminator(parser);
-  if (length === undefined) {
-    return;
+  if (length !== undefined) {
+    return copyBuffer(parser.buffer, offset, length);
   }
-  return copyBuffer(parser.buffer, begin, length);
 }
 
 function parseError(parser) {
   var response = parseSimpleString(parser);
   if (response !== undefined) {
-    response = new Error(response);
+    return new Error(response);
   }
-  return response;
 }
 
 function parseBulkString(parser) {
@@ -62,24 +60,24 @@ function parseBulkString(parser) {
   if (length === undefined) {
     return;
   }
-  if (length === null) {
+  if (length === -1) {
     return null;
   }
-  var begin = parser.offset;
-  parser.offset = begin + length + 2;
-  if (parser.offset > parser.buffer.length) {
-    return;
+
+  var offset = parser.offset;
+  var end = offset + length + 2;
+  if (end <= parser.buffer.length) {
+    parser.offset = end;
+    return copyBuffer(parser.buffer, offset, length);
   }
-  return copyBuffer(parser.buffer, begin, length);
 }
 
 function parseInteger(parser) {
-  var begin = parser.offset;
+  var offset = parser.offset;
   var length = seekTerminator(parser);
-  if (length === undefined) {
-    return;
+  if (length !== undefined) {
+    return parseInt(decodeString(parser.buffer, offset, length), 10);
   }
-  return parseInt(decodeString(parser.buffer, begin, length), 10);
 }
 
 function parseArray(parser) {
@@ -90,13 +88,15 @@ function parseArray(parser) {
   if (length === -1) {
     return null;
   }
+
   var responses = new Array(length);
+  var bufferLength = parser.buffer.length;
   for (var i = 0; i < length; i++) {
-    if ((parser.offset + 4) > parser.buffer.length) {
+    if (parser.offset >= bufferLength) {
       return;
     }
-    var type = parser.buffer[parser.offset++];
-    var response = parseType(parser, type);
+
+    var response = parseType(parser, parser.buffer[parser.offset++]);
     if (response === undefined) {
       return;
     }
@@ -172,15 +172,16 @@ ResponseParser.prototype.parse = function (buffer) {
   appendBuffer(this, buffer);
 
   var length = this.buffer.length;
-  do {
-    var begin = this.offset;
+  while (this.offset < length) {
+    var offset = this.offset;
     var response = parseType(this, this.buffer[this.offset++]);
     if (response === undefined) {
-      this.offset = begin;
+      this.offset = offset;
       return;
     }
+
     this.emit('response', response);
-  } while (this.offset !== length);
+  }
 
   this.buffer = null;
 };
