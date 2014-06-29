@@ -1,7 +1,7 @@
 {
   "name": "node-resp",
   "version": "0.0.1",
-  "description": "REdis Serialization Protocol for Node.js",
+  "description": "A REdis Serialization Protocol implementation for Node.js",
   "dependencies": {
     "eventemitter3": "0.1.2"
   },

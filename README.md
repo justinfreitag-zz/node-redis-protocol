@@ -20,7 +20,7 @@ implementation for [Node.js](http://nodejs.org).
     // Feed chunked data (as buffer or string)
     responseParser.parse(data);
 
-    // Parsed response/s (emitted as part of parse tick)
+    // Parsed response/s emitted during parse tick
     responseParser.on('response', function (response) { ... });
 
     // Fatal error
