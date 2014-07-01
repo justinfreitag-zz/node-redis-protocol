@@ -1,7 +1,11 @@
 var assert = require('assert');
 var resp = require('..');
 
-var parser = new resp.ResponseParser();
+var parser;
+
+beforeEach(function () {
+  parser = new resp.ResponseParser();
+});
 
 // TODO add maximum length buffer and response tests
 
