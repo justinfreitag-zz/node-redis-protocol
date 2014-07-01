@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "A REdis Serialization Protocol implementation for Node.js",
   "dependencies": {
-    "eventemitter3": "0.1.2"
+    "event-emitter": "0.0.1"
   },
   "devDependencies": {
     "mocha": "1.20.0"

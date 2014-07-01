@@ -1,6 +1,6 @@
 'use strict';
 
-var events = require('eventemitter3');
+var events = require('event-emitter');
 var util = require('util');
 
 function decodeString(buffer, offset, length) {
