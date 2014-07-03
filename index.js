@@ -11,7 +11,7 @@ function decodeString(buffer, offset, length) {
   return tmp;
 }
 
-function copyBuffer(buffer, offset, length) {
+function createString(buffer, offset, length) {
   // TODO add binary support
   if (length < 2048) {
     return decodeString(buffer, offset, length);
@@ -32,24 +32,29 @@ function seekTerminator(parser) {
   return length;
 }
 
-function parseLength(parser) {
+function seekSimpleString(parser) {
   var offset = parser.offset;
-  var length = seekTerminator(parser);
-  if (length !== undefined) {
-    return parseInt(decodeString(parser.buffer, offset, length), 10);
+  var length = parser.buffer.length;
+  var string = '';
+  while (offset < length) {
+    var c1 = parser.buffer[offset++];
+    if (c1 === 13) {
+      var c2 = parser.buffer[offset++];
+      if (c2 === 10) {
+        parser.offset = offset;
+        return string;
+      }
+      string += String.fromCharCode(c1) + String.fromCharCode(c2);
+    } else {
+      string += String.fromCharCode(c1);
+    }
   }
+  return undefined;
 }
 
-function parseSimpleString(parser) {
-  var offset = parser.offset;
-  var length = seekTerminator(parser);
-  if (length !== undefined) {
-    return copyBuffer(parser.buffer, offset, length);
-  }
-}
 
 function parseError(parser) {
-  var response = parseSimpleString(parser);
+  var response = seekSimpleString(parser);
   if (response !== undefined) {
     return new Error(response);
   }
@@ -57,36 +62,40 @@ function parseError(parser) {
 
 function parseBulkString(parser) {
   var length = parseLength(parser);
-  if (length === undefined) {
-    return;
-  }
-  if (length === -1) {
-    return null;
+  if (length == null) {
+    return length;
   }
 
   var offset = parser.offset;
   var end = offset + length + 2;
   if (end <= parser.buffer.length) {
     parser.offset = end;
-    return copyBuffer(parser.buffer, offset, length);
+    return createString(parser.buffer, offset, length);
   }
 }
 
 function parseInteger(parser) {
-  var offset = parser.offset;
-  var length = seekTerminator(parser);
-  if (length !== undefined) {
-    return parseInt(decodeString(parser.buffer, offset, length), 10);
+  var string = seekSimpleString(parser);
+  if (string !== undefined) {
+    return parseInt(string, 10);
   }
 }
 
-function parseArray(parser) {
-  var length = parseLength(parser);
+function parseLength(parser) {
+  var length = parseInteger(parser);
   if (length === undefined) {
     return;
   }
   if (length === -1) {
     return null;
+  }
+  return length;
+}
+
+function parseArray(parser) {
+  var length = parseLength(parser);
+  if (length == null) {
+    return length;
   }
 
   var responses = new Array(length);
@@ -95,7 +104,6 @@ function parseArray(parser) {
     if (parser.offset >= bufferLength) {
       return;
     }
-
     var response = parseType(parser, parser.buffer[parser.offset++]);
     if (response === undefined) {
       return;
@@ -107,23 +115,23 @@ function parseArray(parser) {
 }
 
 function handleError(parser, error) {
-  if (!parser.emit('error', error)) {
+  if (parser.emit('error', error) === false) {
     throw error;
   }
 }
 
 function parseType(parser, type) {
   if (type === 43) { // +
-    return parseSimpleString(parser);
+    return seekSimpleString(parser);
+  }
+  if (type === 42) { // *
+    return parseArray(parser);
   }
   if (type === 36) { // $
     return parseBulkString(parser);
   }
   if (type === 58) { // :
     return parseInteger(parser);
-  }
-  if (type === 42) { // *
-    return parseArray(parser);
   }
   if (type === 45) { // -
     return parseError(parser);
@@ -133,7 +141,7 @@ function parseType(parser, type) {
 }
 
 function appendBuffer(parser, buffer) {
-  if (!parser.buffer) {
+  if (parser.buffer === null) {
     parser.buffer = buffer;
     parser.offset = 0;
     return;
@@ -159,6 +167,7 @@ var DEFAULT_OPTIONS = {
 
 function ResponseParser(options) {
   this.options = util._extend(DEFAULT_OPTIONS, options);
+
   this.buffer = null;
   this.offset = 0;
 
