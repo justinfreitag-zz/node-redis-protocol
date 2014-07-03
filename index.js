@@ -3,39 +3,11 @@
 var events = require('event-emitter');
 var util = require('util');
 
-function decodeString(buffer, offset, length) {
-  var tmp = '';
-  while (length--) {
-    tmp = String.fromCharCode(buffer[offset + length]) + tmp;
-  }
-  return tmp;
-}
-
-function createString(buffer, offset, length) {
-  // TODO add binary support
-  if (length < 2048) {
-    return decodeString(buffer, offset, length);
-  }
-  return buffer.toString('utf8', offset, offset + length);
-}
-
-function seekTerminator(parser) {
-  var offset = parser.offset + 1;
-  var length = parser.buffer.length;
-  while (parser.buffer[offset] !== 13 && parser.buffer[offset + 1] !== 10) {
-    if (++offset >= length) {
-      return;
-    }
-  }
-  length = offset - parser.offset;
-  parser.offset = offset + 2;
-  return length;
-}
-
-function seekSimpleString(parser) {
+function parseSimpleString(parser) {
   var offset = parser.offset;
   var length = parser.buffer.length;
   var string = '';
+
   while (offset < length) {
     var c1 = parser.buffer[offset++];
     if (c1 === 13) {
@@ -52,30 +24,8 @@ function seekSimpleString(parser) {
   return undefined;
 }
 
-
-function parseError(parser) {
-  var response = seekSimpleString(parser);
-  if (response !== undefined) {
-    return new Error(response);
-  }
-}
-
-function parseBulkString(parser) {
-  var length = parseLength(parser);
-  if (length == null) {
-    return length;
-  }
-
-  var offset = parser.offset;
-  var end = offset + length + 2;
-  if (end <= parser.buffer.length) {
-    parser.offset = end;
-    return createString(parser.buffer, offset, length);
-  }
-}
-
 function parseInteger(parser) {
-  var string = seekSimpleString(parser);
+  var string = parseSimpleString(parser);
   if (string !== undefined) {
     return parseInt(string, 10);
   }
@@ -89,7 +39,36 @@ function parseLength(parser) {
   if (length === -1) {
     return null;
   }
+
   return length;
+}
+
+function parseError(parser) {
+  var response = parseSimpleString(parser);
+  if (response !== undefined) {
+    return new Error(response);
+  }
+}
+
+function parseBulkString(parser) {
+  var length = parseLength(parser);
+  if (length == null) {
+    return length;
+  }
+  var offsetEnd = parser.offset + length;
+  if (offsetEnd >= parser.buffer.length) {
+    return;
+  }
+  var offsetBegin = parser.offset;
+  parser.offset = offsetEnd + 2;
+  if (length > 2048) {
+    return parser.buffer.toString('utf8', offsetBegin, offsetEnd);
+  }
+  var string = '';
+  while(offsetBegin < offsetEnd) {
+    string += String.fromCharCode(parser.buffer[offsetBegin++]);
+  }
+  return string;
 }
 
 function parseArray(parser) {
@@ -122,7 +101,7 @@ function handleError(parser, error) {
 
 function parseType(parser, type) {
   if (type === 43) { // +
-    return seekSimpleString(parser);
+    return parseSimpleString(parser);
   }
   if (type === 42) { // *
     return parseArray(parser);
