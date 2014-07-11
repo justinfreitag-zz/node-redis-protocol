@@ -24,25 +24,14 @@ function parseSimpleString(parser) {
   return undefined;
 }
 
-function parseInteger(parser) {
+function parseLength(parser) {
   var string = parseSimpleString(parser);
   if (string !== undefined) {
-    return parseInt(string, 10);
-  }
-}
-
-function parseLength(parser) {
-  var length = parseInteger(parser);
-  if (length === -1) {
-    return null;
-  }
-  return length;
-}
-
-function parseError(parser) {
-  var response = parseSimpleString(parser);
-  if (response !== undefined) {
-    return new Error(response);
+    var length = parseInt(string, 10);
+    if (length === -1) {
+      return null;
+    }
+    return length;
   }
 }
 
@@ -109,21 +98,24 @@ function parseType(parser, type) {
     return parseArray(parser);
   }
   if (type === 58) { // :
-    return parseInteger(parser);
+    var string = parseSimpleString(parser);
+    if (string !== undefined) {
+      return parseInt(string, 10);
+    }
+    return;
   }
   if (type === 45) { // -
-    return parseError(parser);
+    var string = parseSimpleString(parser);
+    if (string !== undefined) {
+      return new Error(string);
+    }
+    return;
   }
 
   return handleError(parser, new Error('Unexpected type: ' + type));
 }
 
 function appendBuffer(parser, buffer) {
-  if (parser.buffer === null) {
-    parser.buffer = buffer;
-    parser.offset = 0;
-    return;
-  }
   var oldLength = parser.buffer.length;
   var remainingLength = oldLength - parser.offset;
   var newLength = remainingLength + buffer.length;
@@ -156,7 +148,12 @@ util.inherits(ResponseParser, events.EventEmitter);
 ResponseParser.DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 
 ResponseParser.prototype.parse = function (buffer) {
-  appendBuffer(this, buffer);
+  if (this.buffer === null) {
+    this.buffer = buffer;
+    this.offset = 0;
+  } else {
+    appendBuffer(this, buffer);
+  }
 
   var length = this.buffer.length;
   while (this.offset < length) {
@@ -181,13 +178,14 @@ exports.createRequest = function () {
 };
 
 exports.createRequestString = function () {
-  var request = '*' + arguments.length + '\r\n';
-  for (var i = 0; i < arguments.length; i++) {
+  var length = arguments.length;
+  var request = '*' + length + '\r\n';
+  for (var i = 0; i < length; i++) {
     if (typeof arguments[i] === 'string') {
       request += '$' + arguments[i].length + '\r\n' + arguments[i] + '\r\n';
     } else {
-      var s = '' + arguments[i];
-      request += '$' + s.length + '\r\n' + s + '\r\n';
+      var string = '' + arguments[i];
+      request += '$' + string.length + '\r\n' + string + '\r\n';
     }
   }
   return request;
