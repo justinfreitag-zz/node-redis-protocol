@@ -1,6 +1,7 @@
 'use strict';
 
 var events = require('event-emitter');
+var merge = require('merge');
 var util = require('util');
 
 function parseSimpleString(parser) {
@@ -136,7 +137,7 @@ var DEFAULT_OPTIONS = {
 };
 
 function ResponseParser(options) {
-  this.options = util._extend(DEFAULT_OPTIONS, options);
+  this.options = merge(DEFAULT_OPTIONS, options);
 
   this.buffer = null;
   this.offset = 0;
