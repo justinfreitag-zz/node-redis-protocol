@@ -17,9 +17,9 @@ function parseSimpleString(parser) {
         return string;
       }
       string += String.fromCharCode(c1) + String.fromCharCode(c2);
-    } else {
-      string += String.fromCharCode(c1);
+      continue;
     }
+    string += String.fromCharCode(c1);
   }
   return undefined;
 }
@@ -33,13 +33,9 @@ function parseInteger(parser) {
 
 function parseLength(parser) {
   var length = parseInteger(parser);
-  if (length === undefined) {
-    return;
-  }
   if (length === -1) {
     return null;
   }
-
   return length;
 }
 
@@ -56,14 +52,17 @@ function parseBulkString(parser) {
     return length;
   }
   var offsetEnd = parser.offset + length;
-  if (offsetEnd >= parser.buffer.length) {
+  if ((offsetEnd + 2) > parser.buffer.length) {
     return;
   }
+
   var offsetBegin = parser.offset;
   parser.offset = offsetEnd + 2;
+
   if (length > 2048) {
-    return parser.buffer.toString('utf8', offsetBegin, offsetEnd);
+    return parser.buffer.toString('utf-8', offsetBegin, offsetEnd);
   }
+
   var string = '';
   while(offsetBegin < offsetEnd) {
     string += String.fromCharCode(parser.buffer[offsetBegin++]);
@@ -94,7 +93,7 @@ function parseArray(parser) {
 }
 
 function handleError(parser, error) {
-  if (parser.emit('error', error) === false) {
+  if (!parser.emit('error', error)) {
     throw error;
   }
 }
@@ -103,11 +102,11 @@ function parseType(parser, type) {
   if (type === 43) { // +
     return parseSimpleString(parser);
   }
-  if (type === 42) { // *
-    return parseArray(parser);
-  }
   if (type === 36) { // $
     return parseBulkString(parser);
+  }
+  if (type === 42) { // *
+    return parseArray(parser);
   }
   if (type === 58) { // :
     return parseInteger(parser);
