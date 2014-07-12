@@ -1,3 +1,7 @@
+'use strict';
+
+/* global it */
+
 var assert = require('assert');
 var resp = require('..');
 

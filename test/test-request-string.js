@@ -1,3 +1,7 @@
+'use strict';
+
+/* lobal it */
+
 var assert = require('assert');
 var resp = require('..');
 

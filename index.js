@@ -4,6 +4,18 @@ var events = require('event-emitter');
 var merge = require('merge');
 var util = require('util');
 
+function copyString(buffer, length, offsetBegin, offsetEnd) {
+  if (length > 2048) {
+    return buffer.toString('utf-8', offsetBegin, offsetEnd);
+  }
+
+  var string = '';
+  while(offsetBegin < offsetEnd) {
+    string += String.fromCharCode(buffer[offsetBegin++]);
+  }
+  return string;
+}
+
 function parseSimpleString(parser) {
   var offset = parser.offset;
   var length = parser.buffer.length;
@@ -38,6 +50,7 @@ function parseLength(parser) {
 
 function parseBulkString(parser) {
   var length = parseLength(parser);
+  /* jshint eqnull: true */
   if (length == null) {
     return length;
   }
@@ -49,19 +62,12 @@ function parseBulkString(parser) {
   var offsetBegin = parser.offset;
   parser.offset = offsetEnd + 2;
 
-  if (length > 2048) {
-    return parser.buffer.toString('utf-8', offsetBegin, offsetEnd);
-  }
-
-  var string = '';
-  while(offsetBegin < offsetEnd) {
-    string += String.fromCharCode(parser.buffer[offsetBegin++]);
-  }
-  return string;
+  return copyString(parser.buffer, length, offsetBegin, offsetEnd);
 }
 
 function parseArray(parser) {
   var length = parseLength(parser);
+  /* jshint eqnull: true */
   if (length == null) {
     return length;
   }
@@ -82,6 +88,20 @@ function parseArray(parser) {
   return responses;
 }
 
+function parseInteger(parser) {
+  var string = parseSimpleString(parser);
+  if (string !== undefined) {
+    return parseInt(string, 10);
+  }
+}
+
+function parseError(parser) {
+  var string = parseSimpleString(parser);
+  if (string !== undefined) {
+    return new Error(string);
+  }
+}
+
 function handleError(parser, error) {
   if (!parser.emit('error', error)) {
     throw error;
@@ -89,31 +109,21 @@ function handleError(parser, error) {
 }
 
 function parseType(parser, type) {
-  if (type === 43) { // +
-    return parseSimpleString(parser);
+  /* jshint maxcomplexity: 6 */
+  switch (type) {
+    case 43: // +
+      return parseSimpleString(parser);
+    case 36: // $
+      return parseBulkString(parser);
+    case 42: // *
+      return parseArray(parser);
+    case 58: // :
+      return parseInteger(parser);
+    case 45: // -
+      return parseError(parser);
+    default:
+      return handleError(parser, new Error('Unexpected type: ' + type));
   }
-  if (type === 36) { // $
-    return parseBulkString(parser);
-  }
-  if (type === 42) { // *
-    return parseArray(parser);
-  }
-  if (type === 58) { // :
-    var string = parseSimpleString(parser);
-    if (string !== undefined) {
-      return parseInt(string, 10);
-    }
-    return;
-  }
-  if (type === 45) { // -
-    var string = parseSimpleString(parser);
-    if (string !== undefined) {
-      return new Error(string);
-    }
-    return;
-  }
-
-  return handleError(parser, new Error('Unexpected type: ' + type));
 }
 
 function appendBuffer(parser, buffer) {
@@ -121,7 +131,7 @@ function appendBuffer(parser, buffer) {
   var remainingLength = oldLength - parser.offset;
   var newLength = remainingLength + buffer.length;
   if (newLength > parser.options.maxBufferLength) {
-    handleError(this, new Error('Maximum buffer length exceeded'));
+    handleError(parser, new Error('Maximum buffer length exceeded'));
     return;
   }
   var newBuffer = new Buffer(newLength);
@@ -172,11 +182,6 @@ ResponseParser.prototype.parse = function (buffer) {
 };
 
 exports.ResponseParser = ResponseParser;
-
-// TODO add binary support
-exports.createRequest = function () {
-  throw new Error('Not yet implemented');
-};
 
 exports.createRequestString = function () {
   var length = arguments.length;

@@ -1,17 +1,16 @@
 # node-resp
 
+[![Build Status](https://travis-ci.org/justinfreitag/node-resp.svg?branch=master)](https://travis-ci.org/justinfreitag/node-resp)
+
 **node-resp** is a [REdis](http://redis.io) Serialization Protocol
 implementation for [Node.js](http://nodejs.org).
 
 ## Usage
 
-    // Import library
+    // Import
     var resp = require('node-resp');
 
-    // Create request buffer (supports binary/buffered arguments)
-    var request = resp.createRequest(arguments);
-
-    // Create request string (non-binary argument optimisation)
+    // Create request string (supports string arguments only)
     var requestString = resp.createRequestString(arguments);
 
     // Create response parser
