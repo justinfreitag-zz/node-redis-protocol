@@ -1,7 +1,5 @@
 'use strict';
 
-/* global beforeEach, it */
-
 var assert = require('assert');
 var resp = require('..');
 
@@ -10,8 +8,6 @@ var parser;
 beforeEach(function () {
   parser = new resp.ResponseParser();
 });
-
-// TODO add maximum length buffer and response tests
 
 it('should respond with error', function (done) {
   parser.once('response', function (response) {
