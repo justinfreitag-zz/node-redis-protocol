@@ -1,6 +1,6 @@
 'use strict';
 
-var events = require('event-emitter');
+var events = require('node-events');
 var merge = require('merge');
 var util = require('util');
 
