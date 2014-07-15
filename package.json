@@ -1,16 +1,14 @@
 {
   "name": "node-resp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A REdis Serialization Protocol implementation for Node.js",
-  "homepage": "https://github.com/justinfreitag/node-resp",
-  "bugs": "https://github.com/justinfreitag/node-resp/issues",
   "dependencies": {
-    "node-events": "0.0.1",
+    "node-events": "0.0.2",
     "merge": "1.1.3"
   },
   "devDependencies": {
     "gulp": "3.8.6",
-    "gulp-test": "0.0.1"
+    "gulp-test": "0.0.2"
   },
   "scripts": {
     "test": "gulp test"
@@ -22,6 +20,8 @@
     "type": "git",
     "url": "git@github.com:justinfreitag/node-resp.git"
   },
+  "homepage": "https://github.com/justinfreitag/node-resp",
+  "bugs": "https://github.com/justinfreitag/node-resp/issues",
   "keywords": [
     "redis",
     "database",
@@ -33,3 +33,4 @@
   },
   "license": "MIT"
 }
+

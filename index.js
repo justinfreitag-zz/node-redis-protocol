@@ -142,8 +142,7 @@ function appendBuffer(parser, buffer) {
 }
 
 var DEFAULT_OPTIONS = {
-  maxBufferLength: 16777216,
-  maxResponseLength: 1048576
+  maxBufferLength: 16777216
 };
 
 function ResponseParser(options) {

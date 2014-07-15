@@ -1,7 +1,8 @@
 .npmignore
 .gitignore
-README.md
 .travis.yml
+README.md
+*.log
 target/
 node_modules/
 

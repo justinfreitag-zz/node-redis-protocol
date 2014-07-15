@@ -7,4 +7,6 @@ before_install:
 
 script:
   - gulp test
+  - gulp lint
+  - gulp coverage
 

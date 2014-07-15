@@ -1,7 +1,7 @@
 # node-resp [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
 
-**node-resp** is a [REdis](http://redis.io) Serialization Protocol
-implementation for [Node.js](http://nodejs.org).
+**node-resp** is a [REdis][redis] Serialization Protocol implementation for
+[Node.js][nodejs].
 
 ## Usage
 
@@ -12,16 +12,28 @@ implementation for [Node.js](http://nodejs.org).
     var requestString = resp.createRequestString(arguments);
 
     // Create response parser
-    var responseParser = new resp.ResponseParser();
+    var responseParser = new resp.ResponseParser(options);
 
     // Feed chunked data (as buffer or string)
     responseParser.parse(data);
 
-    // Parsed response/s emitted during parse tick
+    // Parsed response/s are emitted during parse tick
     responseParser.on('response', function (response) { ... });
 
     // Fatal error
     responseParser.on('error', function (error) { ... });
+
+### ResponseParser options
+
+#### maxBufferLength
+
+- Type: `number // bytes`
+- Default: `16777216 // 16MB`
+
+## Testing
+
+Linting, coverage and complexity checks are handled by [gulp-test][gulp-test].
+Enter `gulp` from your command line for options.
 
 ## License
 
@@ -36,4 +48,8 @@ limitations (MIT).
 
 [depstat-url]: https://david-dm.org/justinfreitag/node-resp
 [depstat-image]: https://david-dm.org/justinfreitag/node-resp.png
+
+[redis]: http://redis.io
+[nodejs]: http://nodejs.org
+[gulp-test]: https://github.com/justinfreitag/gulp-test
 
