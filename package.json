@@ -1,6 +1,6 @@
 {
   "name": "node-resp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A REdis Serialization Protocol implementation for Node.js",
   "dependencies": {
     "node-events": "0.0.2",
@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "gulp": "3.8.6",
-    "gulp-test": "0.0.4"
+    "gulp-test": "0.0.5"
   },
   "scripts": {
     "test": "gulp test"
