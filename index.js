@@ -4,6 +4,7 @@ var events = require('node-events');
 var merge = require('merge');
 var util = require('util');
 
+// This is not valid for simpleStrings
 function copyString(buffer, length, offsetBegin, offsetEnd) {
   if (length > 2048) {
     return buffer.toString('utf-8', offsetBegin, offsetEnd);
@@ -16,6 +17,7 @@ function copyString(buffer, length, offsetBegin, offsetEnd) {
   return string;
 }
 
+// This is not UTF-8 compliant
 function parseSimpleString(parser) {
   var offset = parser.offset;
   var length = parser.buffer.length;

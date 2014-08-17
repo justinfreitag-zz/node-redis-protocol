@@ -1,12 +1,12 @@
 'use strict';
 
 var assert = require('assert');
-var resp = require('..');
+var redisProtocol = require('..');
 
 var parser;
 
 beforeEach(function () {
-  parser = new resp.ResponseParser();
+  parser = new redisProtocol.ResponseParser();
 });
 
 it('should respond with error', function (done) {
@@ -125,7 +125,7 @@ it('should emit unexpected type error', function (done) {
 });
 
 it('should throw buffer length error', function () {
-  parser = new resp.ResponseParser({maxBufferLength: 5});
+  parser = new redisProtocol.ResponseParser({maxBufferLength: 5});
   parser.once('response', function () {
     assert.fail();
   });
@@ -136,7 +136,7 @@ it('should throw buffer length error', function () {
 });
 
 it('should emit buffer length error', function (done) {
-  parser = new resp.ResponseParser({maxBufferLength: 5});
+  parser = new redisProtocol.ResponseParser({maxBufferLength: 5});
   parser.once('response', function () {
     assert.fail();
   });

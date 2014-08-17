@@ -1,5 +1,5 @@
 {
-  "name": "node-resp",
+  "name": "node-redis-protocol",
   "version": "0.0.5",
   "description": "A REdis Serialization Protocol implementation for Node.js",
   "dependencies": {
@@ -18,10 +18,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:justinfreitag/node-resp.git"
+    "url": "git@github.com:justinfreitag/node-redis-protocol.git"
   },
-  "homepage": "https://github.com/justinfreitag/node-resp",
-  "bugs": "https://github.com/justinfreitag/node-resp/issues",
+  "homepage": "https://github.com/justinfreitag/node-redis-protocol",
+  "bugs": "https://github.com/justinfreitag/node-redis-protocol/issues",
   "keywords": [
     "redis",
     "database",

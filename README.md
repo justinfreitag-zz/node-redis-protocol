@@ -1,18 +1,18 @@
-# node-resp [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
+# node-redis-protocol [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
 
-**node-resp** is a [REdis][redis] Serialization Protocol implementation for
-[Node.js][nodejs].
+**node-redis-protocol** is a [REdis][redis] Serialization Protocol
+implementation for [Node.js][nodejs].
 
 ## Usage
 
     // Import
-    var resp = require('node-resp');
+    var redisProtocol = require('node-redis-protocol');
 
     // Create request string (supports string arguments only)
-    var requestString = resp.createRequestString(arguments);
+    var requestString = redisProtocol.createRequestString(arguments);
 
     // Create response parser
-    var responseParser = new resp.ResponseParser(options);
+    var responseParser = new redisProtocol.ResponseParser(options);
 
     // Feed chunked data (as buffer or string)
     responseParser.parse(data);
@@ -40,14 +40,14 @@ Enter `gulp` from your command line for options.
 Copyright (c) 2014 Justin Freitag. See the LICENSE file for license rights and
 limitations (MIT).
 
-[npm-url]: https://npmjs.org/package/node-resp
-[npm-image]: https://badge.fury.io/js/node-resp.png
+[npm-url]: https://npmjs.org/package/node-redis-protocol
+[npm-image]: https://badge.fury.io/js/node-redis-protocol.png
 
-[travis-url]: http://travis-ci.org/justinfreitag/node-resp
-[travis-image]: https://travis-ci.org/justinfreitag/node-resp.png?branch=master
+[travis-url]: http://travis-ci.org/justinfreitag/node-redis-protocol
+[travis-image]: https://travis-ci.org/justinfreitag/node-redis-protocol.png?branch=master
 
-[depstat-url]: https://david-dm.org/justinfreitag/node-resp
-[depstat-image]: https://david-dm.org/justinfreitag/node-resp.png
+[depstat-url]: https://david-dm.org/justinfreitag/node-redis-protocol
+[depstat-image]: https://david-dm.org/justinfreitag/node-redis-protocol.png
 
 [redis]: http://redis.io
 [nodejs]: http://nodejs.org

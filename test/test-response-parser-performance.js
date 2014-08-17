@@ -1,9 +1,9 @@
 'use strict';
 
 var assert = require('assert');
-var resp = require('..');
+var redisProtocol = require('..');
 
-var parser = new resp.ResponseParser();
+var parser = new redisProtocol.ResponseParser();
 
 it('should complete parsing within N (adjusted) ticks', function (done) {
   var COUNT = 1000000;
